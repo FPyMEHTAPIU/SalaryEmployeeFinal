@@ -214,13 +214,17 @@ public:
 							employees.push_back(employee);
 							continue;
 						}
-						else if (find(employees.begin(), employees.end(),
-							employee->name) != employees.end())
+						else
 						{
-							continue;
-						}
-						else {
-							employees.push_back(employee);
+							auto compare = [employee](Employee* e) { return e->name == employee->name; };
+							auto i = std::find_if(employees.begin(), employees.end(), compare);
+							if (i != employees.end())
+							{
+								continue;
+							}
+							else {
+								employees.push_back(employee);
+							}
 						}
 					}
 				}
