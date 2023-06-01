@@ -1,2 +1,4 @@
-SalaryEmployee,1,Nick Sav,6000
-HourlyEmployee,2,Ivan Ivanov,50,50
+SalaryEmployee,1,Ivan Ivanov,4000
+HourlyEmployee,2,Petr Petrov,45,45
+CommissionEmployee,3,Oleg Simonov,3000,500
+

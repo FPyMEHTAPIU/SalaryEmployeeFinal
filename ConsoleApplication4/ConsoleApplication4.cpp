@@ -19,7 +19,7 @@ public:
 	{
 	}
 	Employee(int id_0): id(id_0) {
-	// сделать счетчик в производных классах
+		id_generator = id_0;
 	}
 	Employee(string name) : id(++id_generator), name(name) {}
 
@@ -42,7 +42,7 @@ public:
 
 	void print(ostream& os) const
 	{
-		os << "Payroll for: " << id << " - " << name << "\n"
+		os << "Employee Payroll\n" << "================\n" << "Payroll for: " << id << " - " << name << "\n"
 			<< "- Check amount: " << CalculateSalary() << "\n\n";
 	}
 };
@@ -86,6 +86,8 @@ public:
 	string type = "HourlyEmployee";
 
 	HourlyEmployee() = default;
+	HourlyEmployee(int id, string name, int hour_rate1, int hours_worked1) : Employee(name), 
+		hour_rate(hour_rate1), hours_worked(hours_worked1) {}
 
 	void AskSalary() override
 	{
@@ -114,6 +116,10 @@ class CommissionEmployee : public SalaryEmployee
 
 public:
 	string type = "CommissionEmployee";
+
+	CommissionEmployee() = default;
+	CommissionEmployee(int id, string name, int monthly_salary, int commission1) : 
+		SalaryEmployee(id, name, monthly_salary), commission(commission1) {}
 
 	void AskSalary() override
 	{
@@ -149,25 +155,25 @@ public:
 	void menu()
 	{
 		int value = 9;
-		int quit = 0;
+		constexpr int QUIT = 0;
 
-		while (value != quit)
+		while (value != QUIT)
 		{
-			cout << "payroll menu\n";
+			cout << "Payroll menu\n";
 			cout << "============\n";
-			cout << "(1) add employees\n";
-			cout << "(2) write employees\n";
-			cout << "(3) read employees\n";
-			cout << "(4) print employees\n";
-			cout << "(0) quit\n";
-			cout << "please select: ";
+			cout << "(1) Add employees\n";
+			cout << "(2) Write employees to file\n";
+			cout << "(3) Read employees from file\n";
+			cout << "(4) Print payroll\n";
+			cout << "(0) Quit\n";
+			cout << "Please select: ";
 			cin >> value;
 			cout << '\n';
 			switch (value)
 			{
 			case 1:
 			{
-				while (value != quit)
+				while (value != QUIT)
 				{
 					cout << "Salary type\n";
 					cout << "-----------\n";
@@ -209,22 +215,15 @@ public:
 					if (employee)
 					{
 						employee->AskSalary();
-						if (employees.size() == 0)
+						auto compare = [employee](Employee* e) { return e->name == employee->name; };
+						auto i = std::find_if(employees.begin(), employees.end(), compare);
+						if (i != employees.end())
 						{
-							employees.push_back(employee);
-							continue;
+							cout << "This employee is here!\n";
+							delete employee;
 						}
-						else
-						{
-							auto compare = [employee](Employee* e) { return e->name == employee->name; };
-							auto i = std::find_if(employees.begin(), employees.end(), compare);
-							if (i != employees.end())
-							{
-								continue;
-							}
-							else {
-								employees.push_back(employee);
-							}
+						else {
+							employees.push_back(employee);
 						}
 					}
 				}
@@ -274,33 +273,43 @@ public:
 	vector<string> myjoin(char sep)
 	{
 		vector<string> str1;
-		for (int i = 0; i < employees.size(); i++)
+		for (auto e : employees)
 		{
-			// create a class object and call the method ToString();
-			Employee* employee = employees[i];			
-			str1.emplace_back(employee->ToString(','));
+			str1.emplace_back(e->ToString(','));
 		}
 		return str1;
 	}
 
 	void writetofile(vector<Employee*> employees)
 	{
+		int counter = 0;
+		vector<Employee*> employees1 = employees;
 		fstream file("salary_employee.csv", ios_base::out | ios_base::app);
 		if (file.is_open())
 		{
 			auto str = myjoin(',');
-			for (int i = 0; i < str.size(); i++)
+			readfromfile(false);
+			for (int i = 0; i < employees1.size(); i++)
 			{
-				file << str[i] << '\n';
+				Employee* empl = employees1[i];
+				auto compare1 = [empl](Employee* ee) { return ee->name == empl->name; };
+				auto x = std::find_if(this->employees.begin(), this->employees.end(), compare1);
+				if (x == this->employees.end() || this->employees.size() == 0)
+				{
+					file << str[i] << '\n';
+					counter++;
+				}
 			}
 		}
-		cout << employees.size() << " employee(s) added to file " << "salary_employee.csv" << endl;
+		cout << counter << " employee(s) added to file " << "salary_employee.csv" << endl;
 		file.close();
+		readfromfile(false);
 	}
 
-	void readfromfile()
+	void readfromfile(bool a = true)
 	{
 		employees.clear();
+		Employee(0);
 		int id = 0, salary = 0;
 		string tmp, name;
 		ifstream file("salary_employee.csv");
@@ -314,35 +323,40 @@ public:
 					break;
 				}
 				vector<string> temp = mysplit(tmp, ',');
-				// через иф сравнить типы класса
+
 				if (temp[0] == "SalaryEmployee")
 				{
 					id = stoi(temp[1]);
 					name = temp[2];
 					salary = stoi(temp[3]);
+					employees.push_back(new SalaryEmployee(id, name, salary));
 				}
 				else if (temp[0] == "HourlyEmployee")
 				{
 					id = stoi(temp[1]);
 					name = temp[2];
-					salary = stoi(temp[3]) * stoi(temp[4]);
+					employees.push_back(new HourlyEmployee(id, name, stoi(temp[3]), stoi(temp[4])));
 				}
 				else if (temp[0] == "CommissionEmployee")
 				{
 					id = stoi(temp[1]);
 					name = temp[2];
-					salary = stoi(temp[3]) + stoi(temp[4]);
+					salary = stoi(temp[3]);
+					employees.push_back(new CommissionEmployee(id, name, salary, stoi(temp[4])));
 				}
-				employees.push_back(new SalaryEmployee(id, name, salary));
 			}
 		}
-		cout << employees.size() << " employee(s) read from file " << "salary_employee.csv" << endl;
+		if (a)
+		{
+			cout << employees.size() << " employee(s) read from file " << "salary_employee.csv" << endl;
+		}
 	}
 };
 
 int main()
 {
 	PayrollSystem mylist;
+	mylist.readfromfile(false);
 	mylist.menu();
 	return 0;
 }
