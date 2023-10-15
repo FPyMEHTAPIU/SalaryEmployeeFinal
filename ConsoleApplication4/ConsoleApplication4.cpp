@@ -14,11 +14,9 @@ private:
 public:
 	int id;
 	string name = "", type = "Employee";
-	Employee()
-		: id(++id_generator)
+	Employee() : id(++id_generator) {}
+	Employee(int id_0) : id(id_0) 
 	{
-	}
-	Employee(int id_0): id(id_0) {
 		id_generator = id_0;
 	}
 	Employee(string name) : id(++id_generator), name(name) {}
@@ -30,16 +28,20 @@ public:
 		return 0;
 	}
 
+	// ask the employee's name and the salary of this employee in derived classes
 	virtual void AskSalary()
 	{
 		cout << "Please enter employee name: ";
 		getline(cin, name);
 	}
 
-	virtual string ToString(char sep) {
+	// convert data to string with a separator symbol from method's parameter
+	virtual string ToString(char sep) 
+	{
 		return type + sep + to_string(id) + sep + name + sep + to_string(CalculateSalary());
 	}
 
+	// print all employees in the list
 	void print(ostream& os) const
 	{
 		os << "Employee Payroll\n" << "================\n" << "Payroll for: " << id << " - " << name << "\n"
@@ -54,11 +56,11 @@ class SalaryEmployee : public Employee
 	int monthly_salary = 0;
 
 public:
-	string type = "SalaryEmployee";
+	// here is the type by which the employee's salary type from the file is later determined
+	string type = "S";
 
 	SalaryEmployee() = default;
-	SalaryEmployee(int id, string name, int monthly_salary) : Employee(name), monthly_salary(monthly_salary)
-	{}
+	SalaryEmployee(int id, string name, int monthly_salary) : Employee(name), monthly_salary(monthly_salary) {}
 
 	void AskSalary() override
 	{
@@ -73,8 +75,9 @@ public:
 		return monthly_salary;
 	}
 
-	string ToString(char sep) override {
-		return type + sep + to_string(id) + sep + name + sep + to_string(monthly_salary);
+	string ToString(char sep) override 
+	{
+		return to_string(id) + sep + name + sep + type + sep + to_string(monthly_salary);
 	}
 };
 
@@ -83,10 +86,10 @@ class HourlyEmployee : public Employee
 	int hour_rate = 0, hours_worked = 0;
 
 public:
-	string type = "HourlyEmployee";
+	string type = "H";
 
 	HourlyEmployee() = default;
-	HourlyEmployee(int id, string name, int hour_rate1, int hours_worked1) : Employee(name), 
+	HourlyEmployee(int id, string name, int hour_rate1, int hours_worked1) : Employee(name),
 		hour_rate(hour_rate1), hours_worked(hours_worked1) {}
 
 	void AskSalary() override
@@ -104,8 +107,9 @@ public:
 		return hour_rate * hours_worked;
 	}
 
-	string ToString(char sep) override{
-		return type + sep + to_string(id) + sep + name + sep + to_string(hour_rate) + sep 
+	string ToString(char sep) override 
+	{
+		return to_string(id) + sep + name + sep + type + sep + to_string(hour_rate) + sep
 			+ to_string(hours_worked);
 	}
 };
@@ -115,10 +119,10 @@ class CommissionEmployee : public SalaryEmployee
 	int commission = 0;
 
 public:
-	string type = "CommissionEmployee";
+	string type = "C";
 
 	CommissionEmployee() = default;
-	CommissionEmployee(int id, string name, int monthly_salary, int commission1) : 
+	CommissionEmployee(int id, string name, int monthly_salary, int commission1) :
 		SalaryEmployee(id, name, monthly_salary), commission(commission1) {}
 
 	void AskSalary() override
@@ -133,8 +137,9 @@ public:
 	{
 		return SalaryEmployee::CalculateSalary() + commission;
 	}
-	string ToString(char sep) override {
-		return type + sep + to_string(id) + sep + name + sep + 
+	string ToString(char sep) override 
+	{
+		return to_string(id) + sep + name + sep + type + sep +
 			to_string(SalaryEmployee::CalculateSalary()) + sep + to_string(commission);
 	}
 };
@@ -152,6 +157,7 @@ public:
 			delete e;
 		}
 	}
+	// this is a user interface where we can choose what we want to do
 	void menu()
 	{
 		int value = 9;
@@ -173,6 +179,7 @@ public:
 			{
 			case 1:
 			{
+				// this is a user interface where we can choose a salary type and write it
 				while (value != QUIT)
 				{
 					cout << "Salary type\n";
@@ -215,6 +222,8 @@ public:
 					if (employee)
 					{
 						employee->AskSalary();
+						/* here is a function that compares the names in the list and the name
+							we wrote regardless of the class type */
 						auto compare = [employee](Employee* e) { return e->name == employee->name; };
 						auto i = std::find_if(employees.begin(), employees.end(), compare);
 						if (i != employees.end())
@@ -222,7 +231,8 @@ public:
 							cout << "This employee is here!\n";
 							delete employee;
 						}
-						else {
+						else 
+						{
 							employees.push_back(employee);
 						}
 					}
@@ -256,6 +266,7 @@ public:
 		}
 	}
 
+	// here is a function that divides a sentence into words by delimiter characters
 	vector<string> mysplit(string sentence, char sep)
 	{
 		vector<string> vec;
@@ -270,6 +281,7 @@ public:
 		return vec;
 	}
 
+	// here is a function that words into a sentence through a delimiter character
 	vector<string> myjoin(char sep)
 	{
 		vector<string> str1;
@@ -284,13 +296,14 @@ public:
 	{
 		int counter = 0;
 		vector<Employee*> employees1 = employees;
-		fstream file("salary_employee.csv", ios_base::out | ios_base::app);
+		fstream file("employee.csv", ios_base::out | ios_base::app);
 		if (file.is_open())
 		{
 			auto str = myjoin(',');
 			readfromfile(false);
 			for (int i = 0; i < employees1.size(); i++)
 			{
+				// here we also compare the names in the file and in the employees vector
 				Employee* empl = employees1[i];
 				auto compare1 = [empl](Employee* ee) { return ee->name == empl->name; };
 				auto x = std::find_if(this->employees.begin(), this->employees.end(), compare1);
@@ -301,7 +314,7 @@ public:
 				}
 			}
 		}
-		cout << counter << " employee(s) added to file " << "salary_employee.csv" << endl;
+		cout << counter << " employee(s) added to file " << "employee.csv" << endl;
 		file.close();
 		readfromfile(false);
 	}
@@ -312,7 +325,7 @@ public:
 		Employee(0);
 		int id = 0, salary = 0;
 		string tmp, name;
-		ifstream file("salary_employee.csv");
+		ifstream file("employee.csv");
 		if (file.is_open())
 		{
 			while (!file.eof())
@@ -324,31 +337,33 @@ public:
 				}
 				vector<string> temp = mysplit(tmp, ',');
 
-				if (temp[0] == "SalaryEmployee")
+				if (temp[2] == "S")
 				{
-					id = stoi(temp[1]);
-					name = temp[2];
+					id = stoi(temp[0]);
+					name = temp[1];
 					salary = stoi(temp[3]);
 					employees.push_back(new SalaryEmployee(id, name, salary));
 				}
-				else if (temp[0] == "HourlyEmployee")
+				else if (temp[2] == "H")
 				{
-					id = stoi(temp[1]);
-					name = temp[2];
+					id = stoi(temp[0]);
+					name = temp[1];
 					employees.push_back(new HourlyEmployee(id, name, stoi(temp[3]), stoi(temp[4])));
 				}
-				else if (temp[0] == "CommissionEmployee")
+				else if (temp[2] == "C")
 				{
-					id = stoi(temp[1]);
-					name = temp[2];
+					id = stoi(temp[0]);
+					name = temp[1];
 					salary = stoi(temp[3]);
 					employees.push_back(new CommissionEmployee(id, name, salary, stoi(temp[4])));
 				}
 			}
 		}
+		/* Due to the necessity of reading data from a file when launching the program,
+		a condition for outputting the message was added */
 		if (a)
 		{
-			cout << employees.size() << " employee(s) read from file " << "salary_employee.csv" << endl;
+			cout << employees.size() << " employee(s) read from file " << "employee.csv" << endl;
 		}
 	}
 };
