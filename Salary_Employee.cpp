@@ -361,6 +361,7 @@ public:
 		}
 		/* Due to the necessity of reading data from a file when launching the program,
 		a condition for outputting the message was added */
+
 		if (a)
 		{
 			cout << employees.size() << " employee(s) read from file " << "employee.csv" << endl;
